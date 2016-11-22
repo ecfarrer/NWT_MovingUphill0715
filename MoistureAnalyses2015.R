@@ -1,10 +1,8 @@
 #Moisture analyses from 2015
 
-#phyloseq object: datITS315a (rarefied), datITS15a (not rarefied)
-#otu table: datITS315aotu, datITS15aotu (not rarefied)
+#phyloseq object: datITS315a (rarefied, relabun), datITS15a (not rarefied, counts), datITS15b (not rarefied, relabun)
+#otu table: datITS315aotu, datITS15aotu (not rarefied,counts), datITS15botu (not rarefied, relabun)
 
-
-datITS315aotu
 
 hist(datITS315aotu$moisture)
 
@@ -27,12 +25,14 @@ env<-data.frame(cbind(datITS315aotu[,1:32],mois=as.factor(mois)))
 head(env)
 
 spe<-datITS315aotu[,33:4575] #rarefied
-spe<-datITS15aotu[,33:11230] #not rarefied
+spe<-datITS15botu[,33:11230] #not rarefied
 head(spe)
+
 
 #take out doubletons and singletons
 ind<-which(colSums(spe>0)>2)
 spe2<-spe[,ind]
+
 
 
 #Ordination
@@ -42,8 +42,14 @@ plot(scores(m1),col=env$mois)
 
 m2<-capscale(spe2~mois, distance="bray",data=env,na.action = na.omit)
 m2
+
 plot(scores(m2)$sites,col=env$mois,bg=env$mois,pch=21)
 text(scores(m2)$centroids,labels=c("Vlow","Low","Med","High"),col=1:4)
+
+col<-ifelse(env$mois==1,"#9350a1",ifelse(env$mois==2,"#62ad64",ifelse(env$mois==3,"#697cd4","#b8475f")))
+
+plot(scores(m2)$sites,col=col,bg=col,pch=21,cex=2)
+text(scores(m2)$centroids,labels=c("Vlow","Low","Med","High"),col=c("#9350a1","#62ad64","#697cd4","#b8475f"),cex=2)
 
 
 
