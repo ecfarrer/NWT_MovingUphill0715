@@ -25,7 +25,7 @@ env<-data.frame(cbind(datITS315aotu[,1:32],mois=as.factor(mois)))
 head(env)
 
 spe<-datITS315aotu[,33:4575] #rarefied
-#spe<-datITS15botu[,33:11230] #not rarefied
+spe<-datITS15botu[,33:11230] #not rarefied
 head(spe)
 
 
@@ -35,30 +35,33 @@ spe2<-spe[,ind]
 
 
 
-#Ordination
+##### Ordination #####
 
 #NMDS
 m1<-metaMDS(spe2, distance="bray", k=2, autotransform=F,trymax=200)
 plot(scores(m1),col=env$mois)
 
 #dbRDA
-m2<-capscale(spe2~mois+VascPlant_Dens+snowdepth, distance="bray",data=env,na.action = na.omit)
+#moisture and snowdepth are not correlated, and if anything are inversely correlated
+m2<-capscale(spe2~snowdepth, distance="bray",data=env,na.action = na.omit)#+VascPlant_Dens+snowdepth
 m2
 
-anova(m2,by="terms")
+anova(m2,by="margin")
 
 plot(scores(m2)$sites,col=env$mois,bg=env$mois,pch=21)
 text(scores(m2)$centroids,labels=c("Vlow","Low","Med","High"),col=1:4)
 
 col<-ifelse(env$mois==1,"#9350a1",ifelse(env$mois==2,"#62ad64",ifelse(env$mois==3,"#697cd4","#b8475f")))
+#vlow purple, low green, med blue, high red
 
 plot(scores(m2)$sites,col=col,bg=col,pch=21,cex=2)
 text(scores(m2)$centroids,labels=c("Vlow","Low","Med","High"),col=c("#9350a1","#62ad64","#697cd4","#b8475f"),cex=2)
+text(scores(m2)$sites,labels=env$Sample_name)
 
 
 
 
-#Calculating overlap in composition
+##### Calculating overlap in composition #####
 
 spevlo<-spe[which(env$mois==1),]
 spelo<-spe[which(env$mois==2),]

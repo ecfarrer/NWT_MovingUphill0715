@@ -1,10 +1,18 @@
 
 
-datasets: datITS9otu (rarified, relaabun)
+##### Get data together #####
+#datasets: datITS9otu (rarified, relaabun), datITS6otu (not rarified, relabun)
 
+#rarifieid
 spe<-datITS9otu[33:5524]
 datITS9otu$Sample_name<-as.factor(datITS9otu$Sample_name)
 env<-datITS9otu[,1:32]
+
+#not rarified
+spe<-datITS6otu[33:12650]
+datITS6otu$Sample_name<-as.factor(datITS9otu$Sample_name)
+env<-datITS6otu[,1:32]
+
 
 
 ##### Moisture Analysis 07-15 ####
@@ -24,6 +32,7 @@ env2<-env %>%
   spread(year,moisture)
 colnames(env2)<-c("Sample_name","X2007","X2015")
 
+#select plots that only got drier
 ind<-which(env2$X2015<env2$X2007)
 env3<-env2[ind,]
 env2[-ind,]
@@ -31,10 +40,14 @@ env2[-ind,]
 dim(env2)
 
 ind<-which(env$Sample_name%in%env3$Sample_name)
+
+
+
+#Did the plots that got drier all have the same response in microbial communtiy (answer: no)
+
 spe2<-spe[ind,]
 env4<-env[ind,]
 env4$mois<-ifelse(env4$Sample_name%in%c(2,3,25,26,30,47,65),"lo","hi")
-
 
 #Ordination
 m1<-metaMDS(spe2, distance="bray", k=2, autotransform=F,trymax=200)
@@ -52,9 +65,38 @@ text(scores(m2)$centroids,labels=c("Vlow","Low","Med","High"),col=1:4)
 
 
 
+#Compare plots that got drier to plots that got wetter
+
+env3<-env
+env3$gotdrier<-NA
+env3$gotdrier[ind]<-"yes"
+env3$gotdrier[-ind]<-"no"
+env3$yeargotdrier<-paste(env3$year,env3$gotdrier,sep=".")
+
+#take doubletons and singletons out
+ind<-which(colSums(spe>0)>2)
+spe5<-spe[,ind]
+
+m1<-metaMDS(spe5, distance="bray", k=2, autotransform=F,trymax=200)
+plot(scores(m1),col=as.numeric(as.factor(env3$yeargotdrier)))#ifelse(env3$gotdrier=="yes","red","blue")
+#text(scores(m1),labels=env5$Sample_name)
+ordiellipse(m1,env3$yeargotdrier,col=1:4,conf=.99999,kind="se",lwd=2)#
+
+#yes 2007-2015: red -> blue
+#no 2007-2015: black -> green
+
+adonis(spe5~year*gotdrier,data=env3)
+#there is an affect of year and gotdrier (which is odd) but no sig interaction. the year effect is the same across plots (2015 is different regardless of whether plots got wetter or drier). Thus I think this indicates that our moisture measurement is not very useful.
+
+
+
+
+
+
+
 ##### Snow Analysis 07-15: did plots with different snow depth respond differently over time ####
 
-#group by snow depth
+#Group by snow depth
 head(env)
 hist(env$snowdepth)
 sort(env$snowdepth)
@@ -70,33 +112,36 @@ snow[ind]<-3
 
 env$snow<-as.factor(snow)
 
-#take doubletons and singletons out
-ind<-which(colSums(spe>0)>2)
-spe2<-spe[,ind]
+
 
 
 
 ##### Ordination ####
 
+#Take doubletons and singletons out
+ind<-which(colSums(spe>0)>2)
+spe2<-spe[,ind]
+
+
 #NMDS
 m1<-metaMDS(spe2, distance="bray", k=2, autotransform=F,trymax=200)
 
-col<-ifelse(env$snow==1&env$year==2007,"blue",NA)
+col<-ifelse(env$snow==1&env$year==2007,"red3",NA)
 ind<-which(env$snow==1&env$year==2015)
-col[ind]<-"lightblue"
+col[ind]<-"indianred1"
 ind<-which(env$snow==2&env$year==2007)
-col[ind]<-"darkgreen"
-ind<-which(env$snow==2&env$year==2015)
-col[ind]<-"lightgreen"
-ind<-which(env$snow==3&env$year==2007)
 col[ind]<-"darkorange4"
-ind<-which(env$snow==3&env$year==2015)
+ind<-which(env$snow==2&env$year==2015)
 col[ind]<-"tan1"
+ind<-which(env$snow==3&env$year==2007)
+col[ind]<-"blue"
+ind<-which(env$snow==3&env$year==2015)
+col[ind]<-"lightblue"
 
 env$yearsnow<-as.factor(paste(env$year,env$snow,sep="."))
 
 plot(scores(m1),col=col,pch=21,bg=col)
-ordiellipse(m1,env$yearsnow,col=c("blue","darkgreen","darkorange4","lightblue","lightgreen","tan1"),conf=.99999,kind="se",lwd=2)#
+ordiellipse(m1,env$yearsnow,col=c("red3","darkorange4","blue","indianred1","tan1","lightblue"),conf=.99999,kind="se",lwd=2)#
 #ordiellipse(m1,env$yearsnow,col=c("blue","darkgreen","darkorange4","lightblue","lightgreen","tan1"))#
 #ordiellipse(m1,env$yearsnow,col=c("blue","darkgreen","darkorange4","lightblue","lightgreen","tan1"),kind="ehull")#
 #ordihull(m1,env$yearsnow,col=c("blue","darkgreen","darkorange4","lightblue","lightgreen","tan1"))
@@ -105,18 +150,87 @@ text(scores(m1),labels=env$Sample_name)
 adonis(spe2~year+snow+year*snow, data=env, method="bray", by="terms")
 
 
-#dbRDA
-m2<-capscale(spe2~year+snow+year*snow+Condition(Sample_name), distance="bray",data=env,na.action = na.omit)
 
-anova(m2,by="terms")
+#dbRDA
+m2<-capscale(spe2~year+year*snow+Condition(Sample_name), distance="bray",data=env,na.action = na.omit)
+
+anova(m2,by="margin")
+
+anova(m2,by="margin",permutations=how(blocks=env$Sample_name,nperm=1000))
+anova(m2,by="terms",permutations=how(blocks=env$Sample_name,nperm=1000))
 
 plot(m2)
+
+plot(scores(m2)$sites,pch=21,bg=col,col=col)
+ordiellipse(m2,env$yearsnow,col=c("red3","darkorange4","blue","indianred1","tan1","lightblue"),conf=.99999,kind="se",lwd=2)#
 
 col<-ifelse(env$snow==1,"blue",ifelse(env$snow==2,"green","orange"))
 col<-ifelse(env$year==2007,"red","blue")
 
 plot(scores(m2)$sites,col=col,bg=col,pch=21)
 text(scores(m2)$centroids,labels=c("Vlow","Low","Med","High"),col=1:4)
+
+
+
+##### Overlap and Richness #####
+
+#Richness
+env$rich<-rowSums(spe>0)
+aggregate.data.frame(env$rich,by=list(env$year,env$snow),mean)
+
+env2<-env%>%
+  group_by(Sample_name)
+
+ggplot(env2,aes(x=year,y=rich,col=snow)) +
+  geom_point(stat="identity") +
+  geom_line(aes(group=Sample_name))
+
+env2<-env%>%
+  group_by(snow,year)%>%
+  summarise(mean=mean(rich),se=std.error(rich))
+
+ggplot(env2,aes(x=year,y=mean,col=snow)) +
+  geom_point(stat="identity") +
+  geom_line()
+
+env2<-env%>%
+  group_by(year)
+
+ggplot(env2,aes(x=snowdepth,y=rich,col=year)) +
+  geom_point(stat="identity") +
+  geom_line(stat="smooth",method = "lm",size=.8,aes(group=year))
+
+
+#Overlap
+spe2007lo<-spe[which(env$snow==1&env$year==2007),]
+spe20015lo<-spe[which(env$snow==1&env$year==2015),]
+spe2007me<-spe[which(env$snow==2&env$year==2007),]
+spe2015me<-spe[which(env$snow==2&env$year==2015),]
+spe2007hi<-spe[which(env$snow==3&env$year==2007),]
+spe2015hi<-spe[which(env$snow==3&env$year==2015),]
+
+otu2007lo<-colnames(spe2007lo)[(which(colSums(spe2007lo)>0))]
+otu2015lo<-colnames(spe20015lo)[(which(colSums(spe20015lo)>0))]
+otu2007me<-colnames(spe2007me)[(which(colSums(spe2007me)>0))]
+otu2015me<-colnames(spe2015me)[(which(colSums(spe2015me)>0))]
+otu2007hi<-colnames(spe2007hi)[(which(colSums(spe2007hi)>0))]
+otu2015hi<-colnames(spe2015hi)[(which(colSums(spe2015hi)>0))]
+
+#jaccard
+length(intersect(otuvlo,otulo))/length(union(otuvlo,otulo))
+length(intersect(otulo,otume))/length(union(otulo,otume))
+length(intersect(otume,otuhi))/length(union(otume,otuhi))
+
+#sorenson, probably more common
+(2*length(intersect(otu2007lo,otu2015lo)))/(length(intersect(otu2007lo,otu2015lo))+length(union(otu2007lo,otu2015lo)))
+(2*length(intersect(otu2007me,otu2015me)))/(length(intersect(otu2007me,otu2015me))+length(union(otu2007me,otu2015me)))
+(2*length(intersect(otu2007hi,otu2015hi)))/(length(intersect(otu2007hi,otu2015hi))+length(union(otu2007hi,otu2015hi)))
+
+aggregate.data.frame(env$snowdepth,by=list(env$snow),mean)
+
+
+
+
 
 
 
