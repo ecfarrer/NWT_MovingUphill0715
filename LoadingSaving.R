@@ -18,6 +18,14 @@ library(phyloseq)
 #packageVersion("phyloseq")
 library(picante) #for phylogenetic diversity
 
+library(vegan)
+library(plotrix)
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+
+
+
 #for cooccurrence networks
 library(foreach)
 library(doParallel)
@@ -40,7 +48,7 @@ detach(package:igraph)
 sessionInfo()
 
 #extra not needed
-library(vegan)
+
 library(reshape)
 library(plotrix)
 library(Kendall)

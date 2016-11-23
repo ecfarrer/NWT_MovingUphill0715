@@ -25,7 +25,7 @@ env<-data.frame(cbind(datITS315aotu[,1:32],mois=as.factor(mois)))
 head(env)
 
 spe<-datITS315aotu[,33:4575] #rarefied
-spe<-datITS15botu[,33:11230] #not rarefied
+#spe<-datITS15botu[,33:11230] #not rarefied
 head(spe)
 
 
@@ -37,11 +37,15 @@ spe2<-spe[,ind]
 
 #Ordination
 
+#NMDS
 m1<-metaMDS(spe2, distance="bray", k=2, autotransform=F,trymax=200)
 plot(scores(m1),col=env$mois)
 
-m2<-capscale(spe2~mois, distance="bray",data=env,na.action = na.omit)
+#dbRDA
+m2<-capscale(spe2~mois+VascPlant_Dens+snowdepth, distance="bray",data=env,na.action = na.omit)
 m2
+
+anova(m2,by="terms")
 
 plot(scores(m2)$sites,col=env$mois,bg=env$mois,pch=21)
 text(scores(m2)$centroids,labels=c("Vlow","Low","Med","High"),col=1:4)
