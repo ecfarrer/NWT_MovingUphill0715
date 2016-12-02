@@ -94,6 +94,8 @@ adonis(spe5~year*gotdrier,data=env3)
 
 
 
+
+
 ##### Snow Analysis 07-15: did plots with different snow depth respond differently over time ####
 
 #Group by snow depth
@@ -112,7 +114,7 @@ snow[ind]<-3
 
 env$snow<-as.factor(snow)
 
-
+#write.csv(envsnow,"")
 
 
 
@@ -216,21 +218,58 @@ otu2015me<-colnames(spe2015me)[(which(colSums(spe2015me)>0))]
 otu2007hi<-colnames(spe2007hi)[(which(colSums(spe2007hi)>0))]
 otu2015hi<-colnames(spe2015hi)[(which(colSums(spe2015hi)>0))]
 
-#jaccard
-length(intersect(otuvlo,otulo))/length(union(otuvlo,otulo))
-length(intersect(otulo,otume))/length(union(otulo,otume))
-length(intersect(otume,otuhi))/length(union(otume,otuhi))
-
 #sorenson, probably more common
 (2*length(intersect(otu2007lo,otu2015lo)))/(length(intersect(otu2007lo,otu2015lo))+length(union(otu2007lo,otu2015lo)))
 (2*length(intersect(otu2007me,otu2015me)))/(length(intersect(otu2007me,otu2015me))+length(union(otu2007me,otu2015me)))
 (2*length(intersect(otu2007hi,otu2015hi)))/(length(intersect(otu2007hi,otu2015hi))+length(union(otu2007hi,otu2015hi)))
 
+length(setdiff(otu2007lo,otu2015lo))#unique taxa to 2007 lo
+length(setdiff(otu2015lo,otu2007lo))
+length(setdiff(otu2007me,otu2015me))
+length(setdiff(otu2015me,otu2007me))
+length(setdiff(otu2007hi,otu2015hi))
+length(setdiff(otu2015hi,otu2007hi))
+
 aggregate.data.frame(env$snowdepth,by=list(env$snow),mean)
 
 
+#jaccard
+length(intersect(otuvlo,otulo))/length(union(otuvlo,otulo))
+length(intersect(otulo,otume))/length(union(otulo,otume))
+length(intersect(otume,otuhi))/length(union(otume,otuhi))
 
 
+#Calculating species overlap on a pairwise plot basis
 
+plots<-sort(unique(env$Sample_name))
+ov<-rep(NA,69)
+
+for (i in 1:69){
+  curplot<-plots[i]
+  temp07<-subset(spe,env$Sample_name==curplot&env$year==2007)
+  temp15<-subset(spe,env$Sample_name==curplot&env$year==2015)
+  sp07<-colnames(temp07)[(which(colSums(temp07)>0))]
+  sp15<-colnames(temp15)[(which(colSums(temp15)>0))]
+  ov[i]<-(2*length(intersect(sp07,sp15)))/(length(intersect(sp07,sp15))+length(union(sp07,sp15)))
+  }
+
+pairwise<-data.frame(plots,ov)
+pairwise$Sample_name<-as.factor(pairwise$plots)
+envsub<-subset(env,year==2007)
+pairwise2<-merge(pairwise,envsub,by="Sample_name")
+plot(pairwise2$snowdepth,pairwise2$ov)
+abline(lm(pairwise2$ov~pairwise2$snowdepth))
+aggregate.data.frame(pairwise2$ov,by=list(pairwise2$snow),mean)
+aggregate.data.frame(pairwise2$ov,by=list(pairwise2$snow),std.error)
+
+pairwise3<-pairwise2%>%
+  group_by(snow)
+means<-pairwise3%>%
+  summarise(mean=mean(ov),se=std.error(ov))
+ggplot(means,aes(x=snow,y=mean)) +
+  geom_bar(stat="identity") +
+  geom_errorbar(aes(ymax=mean+se,ymin=mean-se),width=.25)
+
+anova(gls(ov~snowdepth,data=pairwise2))
 
 
