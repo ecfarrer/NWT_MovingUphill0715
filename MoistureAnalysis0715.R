@@ -125,29 +125,51 @@ ind<-which(colSums(spe>0)>2)
 spe2<-spe[,ind]
 
 
+#old colors
+# col<-ifelse(env$snow==1&env$year==2007,"red3",NA)
+# ind<-which(env$snow==1&env$year==2015)
+# col[ind]<-"indianred1"
+# ind<-which(env$snow==2&env$year==2007)
+# col[ind]<-"darkorange4"
+# ind<-which(env$snow==2&env$year==2015)
+# col[ind]<-"tan1"
+# ind<-which(env$snow==3&env$year==2007)
+# col[ind]<-"blue"
+# ind<-which(env$snow==3&env$year==2015)
+# col[ind]<-"lightblue"
+# 
+
+http://www.hexcolortool.com/#ab3b57
+
+
 #NMDS
 m1<-metaMDS(spe2, distance="bray", k=2, autotransform=F,trymax=200)
 
-col<-ifelse(env$snow==1&env$year==2007,"red3",NA)
+col<-ifelse(env$snow==1&env$year==2007,"#ab3b57",NA)
 ind<-which(env$snow==1&env$year==2015)
-col[ind]<-"indianred1"
+col[ind]<-"#db95a6"
 ind<-which(env$snow==2&env$year==2007)
-col[ind]<-"darkorange4"
+col[ind]<-"#5268cb"
 ind<-which(env$snow==2&env$year==2015)
-col[ind]<-"tan1"
+col[ind]<-"#a9b4e5"
 ind<-which(env$snow==3&env$year==2007)
-col[ind]<-"blue"
+col[ind]<-"#639e51"
 ind<-which(env$snow==3&env$year==2015)
-col[ind]<-"lightblue"
+col[ind]<-"#abcea1"
 
 env$yearsnow<-as.factor(paste(env$year,env$snow,sep="."))
 
 plot(scores(m1),col=col,pch=21,bg=col)
-ordiellipse(m1,env$yearsnow,col=c("red3","darkorange4","blue","indianred1","tan1","lightblue"),conf=.99999,kind="se",lwd=2)#
-#ordiellipse(m1,env$yearsnow,col=c("blue","darkgreen","darkorange4","lightblue","lightgreen","tan1"))#
+ordiellipse(m1,env$yearsnow,col=c("#ab3b57","#5268cb","#639e51","#db95a6","#a9b4e5","#abcea1"),conf=.99999,kind="se",lwd=2,lty=c(1,1,1,2,2,2))#
+legend("topleft",c("Long GSL","Med GSL","Short GSL"),col=c("#ab3b57","#5268cb","#639e51"),pch=21,pt.bg=c("#ab3b57","#5268cb","#639e51"),lty=1,bty="n")
+text(-.15,.74,"Shift over time")
+segments(-.4,.6,-.2,.6,lwd=2)
+arrows(-.2,.6,.1,.6,lwd=2,lty=2)
+#ordiellipse(m1,env$yearsnow,col=c("red3","darkorange4","blue","indianred1","tan1","lightblue"),conf=.99999,kind="se",lwd=2)#
 #ordiellipse(m1,env$yearsnow,col=c("blue","darkgreen","darkorange4","lightblue","lightgreen","tan1"),kind="ehull")#
 #ordihull(m1,env$yearsnow,col=c("blue","darkgreen","darkorange4","lightblue","lightgreen","tan1"))
 text(scores(m1),labels=env$Sample_name)
+
 
 adonis(spe2~year+snow+year*snow, data=env, method="bray", by="terms")
 
