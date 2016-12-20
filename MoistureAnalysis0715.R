@@ -174,6 +174,43 @@ text(scores(m1),labels=env$Sample_name)
 adonis(spe2~year+snow+year*snow, data=env, method="bray", by="terms")
 
 
+#Dissimilarities
+dis0715<-data.frame(Sample_name=rep(NA,69),dist=rep(NA,69))
+for(i in 1:69){
+  plots<-sort(unique(env$Sample_name))
+  tempplot<-plots[i]
+  tempind<-which(env$Sample_name==tempplot)
+  tempspe<-spe2[tempind,]
+  dis0715[i,1]<-as.character(tempplot)
+  dis0715[i,2]<-vegdist(tempspe)
+}
+
+env2<-merge(env,dis0715,"Sample_name")
+env3<-env2%>%
+  filter(year==2015)%>%
+  group_by(snow)%>%
+  summarise(meandist=mean(dist),sedist=std.error(dist))
+env3
+
+pdf("/Users/farrer/Dropbox/EmilyComputerBackup/Documents/Proposals/NSFpreproposal2017/Figs/microbe0715dissimilaritysnowdepth.pdf",width=4,height=4)
+ggplot(env3,aes(x=snow,y=meandist,col=snow)) +
+  theme(legend.position="none",text = element_text(size=20)) +
+  labs(x ="Snow depth",y="Dissimilarity 2007-2015") +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymin=meandist-sedist,ymax=meandist+sedist),size=1,width=.5,stat="identity")
+dev.off()
+
+env4<-env2%>%
+  filter(year==2015)
+
+ggplot(env4,aes(x=snowdepth,y=dist)) +
+  theme(legend.position="none",text = element_text(size=20)) +
+  labs(x ="Snow depth",y="Disimilarity between 2007, 2015") +
+  geom_point(size=3) +
+  geom_smooth(method="lm",se=F)
+
+
+
 
 #dbRDA
 m2<-capscale(spe2~year+year*snow+Condition(Sample_name), distance="bray",data=env,na.action = na.omit)

@@ -1,12 +1,15 @@
 #Moisture analyses from 2015
 
 #phyloseq object: datITS315a (rarefied, relabun), datITS15a (not rarefied, counts), datITS15b (not rarefied, relabun)
-#otu table: datITS315aotu, datITS15aotu (not rarefied,counts), datITS15botu (not rarefied, relabun)
+#otu table: datITS315aotu (rarefied, relabun), datITS15aotu (not rarefied,counts), datITS15botu (not rarefied, relabun)
 
 
 hist(datITS315aotu$moisture)
 
 head(datITS315aotu)[,1:40]
+
+
+# Moisture analysis
 
 mois<-ifelse(datITS315aotu$moisture<7.5,1,0)
 ind<-which(datITS315aotu$moisture>=7.5&datITS315aotu$moisture<11)
@@ -93,4 +96,61 @@ aggregate.data.frame(env$moisture,by=list(env$mois),mean)
 
 
 
+# Snow analysis
+
+#Group by snow depth
+
+snow<-ifelse(datITS315aotu$snowdepth<155,1,0)
+sum(snow)
+ind<-which(datITS315aotu$snowdepth>=155&datITS315aotu$snowdepth<262)
+length(ind)
+snow[ind]<-2
+ind<-which(datITS315aotu$snowdepth>=262&datITS315aotu$snowdepth<500)
+length(ind)
+snow[ind]<-3
+
+env<-data.frame(cbind(datITS315aotu[,1:32],snow=as.factor(snow)))
+head(env)
+
+spe<-datITS315aotu[,33:4575] #rarefied
+#spe<-datITS15botu[,33:11230] #not rarefied
+head(spe)
+
+env$snow<-as.factor(snow)
+
+#take out doubletons and singletons
+ind<-which(colSums(spe>0)>2)
+spe2<-spe[,ind]
+
+
+#NMDS
+
+m1<-metaMDS(spe2, distance="bray", k=3, autotransform=F,trymax=200)
+
+col<-ifelse(env$snow==1,"#ab3b57",NA) #low snow is red
+ind<-which(env$snow==2) #medium snow is blue
+col[ind]<-"#5268cb"
+ind<-which(env$snow==3) #high snow is green
+col[ind]<-"#639e51"
+
+#env$yearsnow<-as.factor(paste(env$year,env$snow,sep="."))
+
+pdf("/Users/farrer/Dropbox/EmilyComputerBackup/Documents/Proposals/NSFpreproposal2017/Figs/fungisnowordination2015.pdf",height=5,width=5)
+plot(scores(m1)[,1:2],col=col,pch=21,bg=col)
+ordiellipse(m1,env$snow,col=c("#ab3b57","#5268cb","#639e51"),conf=.99999,kind="se",lwd=2,lty=c(1,1,1))#
+legend("topleft",c("Low snow","Med snow","High snow"),col=c("#ab3b57","#5268cb","#639e51"),pch=21,pt.bg=c("#ab3b57","#5268cb","#639e51"),lty=1,bty="n",y.intersp=1)
+dev.off()
+
+#text(-.15,.74,"Shift over time")
+#segments(-.4,.6,-.2,.6,lwd=2)
+#arrows(-.2,.6,.1,.6,lwd=2,lty=2)
+
+adonis(spe2~snow, data=env, method="bray", by="terms")
+
+
+
+
+m2<-capscale(spe2~snow, distance="bray",data=env,na.action = na.omit)#snowdepth+moisture+WHC
+m2
+plot(m2)
 
