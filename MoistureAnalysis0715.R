@@ -200,6 +200,26 @@ ggplot(env3,aes(x=snow,y=meandist,col=snow)) +
   geom_errorbar(aes(ymin=meandist-sedist,ymax=meandist+sedist),size=1,width=.5,stat="identity")
 dev.off()
 
+#This is from the network code, using Guem and SB dominants cutoffs for community type
+dmplots<-c(0,104,106,113,120,122,132,133,135,18,36,66,7,74,79,9,98)
+sbplots<-c( 107,109,111,119,123,124,125,152,154,155,157,30,31,75 ,83,84,89)
+dmsbplots<-data.frame(cbind(Sample_name=c(dmplots,sbplots),com=rep(c("DM","SB"),each=17)))
+env5<-merge(env2,dmsbplots)
+
+env6<-env5%>%
+  filter(year==2015)%>%
+  group_by(com)%>%
+  summarise(meandist=mean(dist),sedist=std.error(dist))
+env6$com<-factor(env6$com,levels=c("SB","DM"))
+
+pdf("/Users/farrer/Dropbox/EmilyComputerBackup/Documents/Proposals/NSFpreproposal2017/Figs/microbe0715dissimilaritydmsb.pdf",width=4,height=4)
+ggplot(env6,aes(x=com,y=meandist,col=com)) +
+  theme(legend.position="none",text = element_text(size=20)) +
+  labs(x ="Community type",y="Dissimilarity 2007-2015") +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymin=meandist-sedist,ymax=meandist+sedist),size=1,width=.5,stat="identity")
+dev.off()
+
 env4<-env2%>%
   filter(year==2015)
 

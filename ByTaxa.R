@@ -48,7 +48,33 @@ speenv2<-speenv%>%
 ggplot(speenv2,aes(x=snowdepth,y=sqrt(abun),color=species)) +
   geom_point(stat="identity") +
   geom_line(stat="smooth",method = "lm",size=.8)
+  #facet_wrap(~species,scales="free")
 
 
-+
-  facet_wrap(~species,scales="free")
+#looking for pathogens only in DM and SB plots
+dmsbplots
+datITS315d<-subset_samples(datITS315c,Sample_name%in%dmsbplots$Sample_name)
+
+
+spe<-t(otu_table(datITS315d))
+env<-sample_data(datITS315d)
+speenv<-cbind(env,spe)
+
+speenv2<-merge(speenv,dmsbplots)
+
+speenv3<-speenv2%>%
+  gather(species,abun,denovo14211:denovo35175)%>%
+  group_by(com)%>%
+  summarize(meanabun=mean(abun),sebun=std.error(abun))
+speenv3$com<-factor(speenv3$com,levels=c("SB","DM"))
+
+pdf("/Users/farrer/Dropbox/EmilyComputerBackup/Documents/Proposals/NSFpreproposal2017/Figs/pathogenabundmsb.pdf",width=4,height=4)
+ggplot(speenv3,aes(x=com,y=meanabun,color=com)) +
+  theme(legend.position="none",text = element_text(size=20)) +
+  labs(x ="Community type",y="Pathogen relative abundance") +
+  geom_point(size=3) +
+  geom_errorbar(aes(ymin=meanabun-sebun,ymax=meanabun+sebun),size=1,width=.5,stat="identity")
+dev.off()
+
+
+
