@@ -46,8 +46,9 @@ plot(scores(m1),col=env$mois)
 
 #dbRDA
 #moisture and snowdepth are not correlated, and if anything are inversely correlated
-m2<-capscale(spe2~snowdepth, distance="bray",data=env,na.action = na.omit)#+VascPlant_Dens+snowdepth
+m2<-capscale(spe2~snowdepth+VascPlant_Dens, distance="bray",data=env,na.action = na.omit)#+VascPlant_Dens+snowdepth
 m2
+plot(m2)
 
 anova(m2,by="margin")
 
@@ -60,6 +61,31 @@ col<-ifelse(env$mois==1,"#9350a1",ifelse(env$mois==2,"#62ad64",ifelse(env$mois==
 plot(scores(m2)$sites,col=col,bg=col,pch=21,cex=2)
 text(scores(m2)$centroids,labels=c("Vlow","Low","Med","High"),col=c("#9350a1","#62ad64","#697cd4","#b8475f"),cex=2)
 text(scores(m2)$sites,labels=env$Sample_name)
+
+
+#plot with snowdepth and vasc plants for Liz Kimborough
+
+env<-cbind(env,snow)
+write.csv(spe2,"/Users/farrer/Desktop/spe2.csv")
+write.csv(env,"/Users/farrer/Desktop/env.csv")
+
+spe2<-read.csv("/Users/farrer/Desktop/spe2.csv",row.names=1)
+env<-read.csv("/Users/farrer/Desktop/env.csv",row.names=1)
+
+m2<-capscale(spe2~snowdepth+VascPlant_Dens, distance="bray",data=env,na.action = na.omit)#+VascPlant_Dens+snowdepth
+m2
+plot(m2)
+
+col<-ifelse(env$mois==1,"#9350a1",ifelse(env$mois==2,"#62ad64",ifelse(env$mois==3,"#697cd4","#b8475f")))
+#colored by soil moisture: vlow purple, low green, med blue, high red
+
+par(mai=c(1,1,.42,.42))
+plot(scores(m2)$sites,col=col,bg=col,pch=21,xlab=paste("Axis 1 (",sprintf("%.1f",m2$CCA$eig["CAP1"]/m2$tot.chi*100,3),"%)",sep=""),ylab=paste("Axis 2 (",sprintf("%.1f",m2$CCA$eig["CAP2"]/m2$tot.chi*100,3),"%)",sep=""),cex.lab=1.4,ylim=c(-2.5,2),xlim=c(-2.5,2))
+abline(h=0,col=gray(.70))
+abline(v=0,col=gray(.70))
+text(m2$CCA$biplot*2-.25,labels=c("Snowdepth","PlantDensity"),col=1) #I multiplied the centroid scores by 2 so the graph would look prettier, as long as they are multiplied by a constant, it doesn't change how you would read the result. the (-.25) just makes the name slighly offset from the head of the arrow created below
+arrows(0,0,m2$CCA$biplot[,1]*2,m2$CCA$biplot[,2]*2,length=.05,col=1,lwd=2) #these scores have to be multiplid by 2 as well
+
 
 
 
