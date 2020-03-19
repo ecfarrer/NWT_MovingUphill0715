@@ -161,9 +161,10 @@ col[ind]<-"#639e51"
 
 #env$yearsnow<-as.factor(paste(env$year,env$snow,sep="."))
 
-pdf("/Users/farrer/Dropbox/EmilyComputerBackup/Documents/Proposals/NSFpreproposal2017/Figs/fungisnowordination2015.pdf",height=5,width=5)
-plot(scores(m1)[,1:2],col=col,pch=21,bg=col)
-ordiellipse(m1,env$snow,col=c("#ab3b57","#5268cb","#639e51"),conf=.99999,kind="se",lwd=2,lty=c(1,1,1))#
+#I just changed the width for the 2020 NSF EAGER version
+pdf("/Users/farrer/Dropbox/EmilyComputerBackup/Documents/Proposals/NSF/NSF2020/Figs/fungisnowordination2015.pdf",height=5,width=4.3)
+plot(scores(m1)[,1:2],col=col,pch=21,bg=col,cex=1.5)
+ordiellipse(m1,env$snow,col=c("#ab3b57","#5268cb","#639e51"),conf=.99999,kind="se",lwd=2.5,lty=c(1,1,1))#
 legend("topleft",c("Low snow","Med snow","High snow"),col=c("#ab3b57","#5268cb","#639e51"),pch=21,pt.bg=c("#ab3b57","#5268cb","#639e51"),lty=1,bty="n",y.intersp=1)
 dev.off()
 

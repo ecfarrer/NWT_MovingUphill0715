@@ -7,7 +7,7 @@ otufileITS <-import_biom("/Users/farrer/Dropbox/EmilyComputerBackup/Documents/Ni
 head(tax_table(otufileITS))
 head(otu_table(otufileITS))
 
-#Import mapping and tree file
+#Import mapping and tree file. the snow data is from Andrew's original 2007 datafile from like his nature paper. I don't know why I used this (probably we had not created the new snow file yet, since snow is not in the original mapping files). The updated values should be from 1997-2015.
 mapITS<-import_qiime_sample_data("/Users/farrer/Dropbox/EmilyComputerBackup/Documents/Niwot_King/Figures&Stats/kingdata/MappingFiles/ITS_Niwot_20072015_All_MapFilenewlomehisnow.txt")
 
 datITS<-merge_phyloseq(otufileITS,mapITS)
